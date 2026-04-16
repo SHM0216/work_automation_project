@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>업무일지</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1d4ed8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="업무일지">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif;font-size:14px;color:#222;background:#f9f9f7;padding:24px 16px;padding-bottom:calc(24px + env(safe-area-inset-bottom));}
+.wrap{max-width:900px;margin:0 auto;background:#fff;border-radius:12px;padding:28px;border:1px solid #e5e5e0;}
+h1{font-size:34px;font-weight:700;text-align:center;margin-bottom:4px;letter-spacing:6px;color:#1d4ed8;}
+.subtitle{display:none;}
+.nav{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:22px;}
+.nav button{background:#fff;border:1px solid #ccc;border-radius:8px;padding:6px 16px;cursor:pointer;font-size:13px;}
+.nav button:hover{background:#f0f0f0;}
+.week-label{font-size:19px;font-weight:600;min-width:260px;text-align:center;}
+section{margin-bottom:22px;}
+section h2{font-size:15px;font-weight:600;margin-bottom:8px;border-bottom:1px solid #e0e0d8;padding-bottom:6px;}
+table{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed;}
+th,td{border:1px solid #d8d8d0;vertical-align:top;}
+th{background:#f5f5f0;font-weight:600;text-align:center;padding:7px 6px;}
+.day-cell{width:62px;text-align:center;font-weight:500;padding:8px 4px;vertical-align:middle;}
+.status-td{width:132px;padding:6px;}
+.task-td{padding:6px 8px;}
+.status-wrap{display:flex;flex-direction:column;gap:4px;}
+.sbtn{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;border:1.5px solid #ccc;font-size:11px;font-weight:500;cursor:pointer;background:transparent;color:#888;white-space:nowrap;}
+.sbtn:hover{opacity:.8;}
+.sbtn.leave-on{background:#dbeafe;border-color:#3b82f6;color:#1e40af;}
+.sbtn.subst-on{background:#fef9c3;border-color:#f59e0b;color:#92400e;}
+.sbtn.work-on{background:#eff6ff;border-color:#93c5fd;color:#1d4ed8;}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.d-leave{background:#3b82f6;}
+.d-subst{background:#f59e0b;}
+.d-work{background:#93c5fd;}
+tr.leave-row td{background:#dbeafe;}
+tr.subst-row td{background:#fef9c3;}
+tr.work-row td{background:#eff6ff;}
+.check-area{display:flex;flex-direction:column;gap:2px;}
+.check-item{display:flex;align-items:center;gap:5px;min-height:24px;}
+.check-item input[type=checkbox]{width:13px;height:13px;flex-shrink:0;cursor:pointer;accent-color:#3b82f6;}
+.check-item .item-text{flex:1;border:none;background:transparent;font-size:13px;font-family:inherit;color:#222;outline:none;padding:1px 0;min-width:0;line-height:1.5;}
+.check-item .item-text.done{text-decoration:line-through;color:#bbb;}
+.check-item .del{opacity:0;background:none;border:none;cursor:pointer;color:#ccc;font-size:13px;padding:0 2px;flex-shrink:0;}
+.check-item:hover .del{opacity:1;}
+.check-item .del:hover{color:#e55;}
+.add-btn{display:inline-flex;align-items:center;gap:2px;font-size:11px;color:#bbb;background:none;border:none;cursor:pointer;padding:2px 0;margin-top:2px;}
+.add-btn:hover{color:#3b82f6;}
+.task-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.task-box{border:1px solid #e0e0d8;border-radius:8px;padding:10px;}
+.task-box h3{font-size:12px;font-weight:600;margin-bottom:6px;display:flex;gap:5px;align-items:center;}
+.tag{font-size:11px;padding:2px 8px;border-radius:6px;font-weight:500;}
+.t-sp{background:#dbeafe;color:#1e40af;}
+.t-sm{background:#f0f0ec;color:#555;}
+.t-sh{background:#fef9c3;color:#92400e;}
+.t-lo{background:#dcfce7;color:#166534;}
+.task-ta{width:100%;border:none;background:transparent;resize:none;font-size:13px;font-family:inherit;color:#222;min-height:68px;outline:none;line-height:1.6;}
+.grateful-list{display:flex;flex-direction:column;gap:7px;}
+.grateful-row{display:flex;align-items:center;gap:8px;}
+.grateful-row span{color:#888;}
+.grateful-row input{flex:1;border:none;border-bottom:1px solid #ccc;background:transparent;padding:4px 2px;font-size:13px;font-family:inherit;color:#222;outline:none;}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:9px;}
+.leg{display:flex;align-items:center;gap:5px;font-size:12px;color:#888;}
+.legdot{width:10px;height:10px;border-radius:50%;}
+.actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap;}
+.actions button{border:1px solid #ccc;border-radius:8px;padding:7px 20px;cursor:pointer;font-size:13px;background:#fff;}
+.actions button.primary{background:#1d4ed8;color:#fff;border-color:#1d4ed8;}
+.actions button:hover{opacity:.85;}
+.saved{font-size:12px;color:#16a34a;align-self:center;opacity:0;transition:opacity .3s;}
+.saved.show{opacity:1;}
+.hist{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+.hist button{font-size:12px;border:1px solid #ccc;border-radius:8px;padding:4px 10px;background:#fff;cursor:pointer;color:#888;}
+.hist button.on{background:#1d4ed8;color:#fff;border-color:#1d4ed8;}
+
+/* 설치 배너 */
+#install-banner{display:none;align-items:center;justify-content:space-between;background:#1d4ed8;color:#fff;padding:10px 16px;border-radius:10px;margin-bottom:16px;font-size:13px;gap:10px;}
+#install-banner button{background:#fff;color:#1d4ed8;border:none;border-radius:6px;padding:5px 14px;cursor:pointer;font-size:13px;font-weight:600;}
+#install-banner .close-banner{background:transparent;color:#fff;border:none;cursor:pointer;font-size:18px;padding:0 4px;line-height:1;}
+
+/* 모바일 반응형 */
+@media(max-width:600px){
+  body{padding:12px 8px;}
+  .wrap{padding:16px 10px;border-radius:8px;}
+  h1{font-size:24px;letter-spacing:3px;}
+  .week-label{font-size:15px;min-width:0;}
+  .nav{gap:8px;}
+  .nav button{padding:5px 10px;font-size:12px;}
+  .day-cell{width:44px;font-size:11px;}
+  .status-td{width:90px;padding:4px;}
+  .sbtn{font-size:10px;padding:2px 6px;}
+  .task-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>업 무 일 지</h1>
+  <div class="subtitle" id="subtitle"></div>
+
+  <!-- 설치 배너 -->
+  <div id="install-banner">
+    <span>📱 홈 화면에 추가하면 앱처럼 사용할 수 있어요!</span>
+    <button id="install-btn">설치</button>
+    <button class="close-banner" id="close-banner">✕</button>
+  </div>
+
+  <div class="nav">
+    <button onclick="cw(-1)">◀ 이전 주</button>
+    <div class="week-label" id="wlabel"></div>
+    <button onclick="cw(1)">다음 주 ▶</button>
+  </div>
+  <div id="histbar" style="margin-bottom:12px;"></div>
+
+  <section>
+    <h2>1. 오늘의 할 일</h2>
+    <div class="legend">
+      <div class="leg"><div class="legdot" style="background:#3b82f6;"></div>연가</div>
+      <div class="leg"><div class="legdot" style="background:#f59e0b;"></div>대체휴무</div>
+      <div class="leg"><div class="legdot" style="background:#93c5fd;"></div>근무</div>
+    </div>
+    <table>
+      <colgroup>
+        <col style="width:62px"><col style="width:132px"><col><col>
+      </colgroup>
+      <thead><tr><th>요일</th><th>근태</th><th>오전</th><th>오후</th></tr></thead>
+      <tbody id="dtable"></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>2. 해야 할 일</h2>
+    <div class="task-grid">
+      <div class="task-box"><h3><span class="tag t-sp">특이업무</span><span class="tag t-sh">단기</span></h3><textarea class="task-ta" id="tss" placeholder="내용 입력..."></textarea></div>
+      <div class="task-box"><h3><span class="tag t-sm">단순업무</span><span class="tag t-sh">단기</span></h3><textarea class="task-ta" id="tms" placeholder="내용 입력..."></textarea></div>
+      <div class="task-box"><h3><span class="tag t-sp">특이업무</span><span class="tag t-lo">장기</span></h3><textarea class="task-ta" id="tsl" placeholder="내용 입력..."></textarea></div>
+      <div class="task-box"><h3><span class="tag t-sm">단순업무</span><span class="tag t-lo">장기</span></h3><textarea class="task-ta" id="tml" placeholder="내용 입력..."></textarea></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>3. 이번 주 감사한 일</h2>
+    <div class="grateful-list" id="glist"></div>
+  </section>
+
+  <div class="actions">
+    <span class="saved" id="sbadge">저장되었습니다 ✓</span>
+    <button onclick="clearForm()">초기화</button>
+    <button class="primary" onclick="save()">저장</button>
+  </div>
+</div>
+
+<script>
+// ── Service Worker 등록 ──
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+
+// ── PWA 설치 배너 ──
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('install-banner').style.display = 'flex';
+});
+document.getElementById('install-btn').onclick = async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  document.getElementById('install-banner').style.display = 'none';
+};
+document.getElementById('close-banner').onclick = () => {
+  document.getElementById('install-banner').style.display = 'none';
+};
+
+// ── 앱 데이터 ──
+const DAYS = ['월요일','화요일','수요일','목요일','금요일','토요일','일요일'];
+const ST = [
+  {k:'leave', l:'연가',     on:'leave-on', row:'leave-row', dot:'d-leave'},
+  {k:'subst', l:'대체휴무', on:'subst-on', row:'subst-row', dot:'d-subst'},
+  {k:'work',  l:'근무',     on:'work-on',  row:'work-row',  dot:'d-work'}
+];
+
+let ws = getMon(new Date()), allD = {}, rowSt = Array(DAYS.length).fill(null);
+try { allD = JSON.parse(localStorage.getItem('wl3') || '{}'); } catch(e) {}
+
+function getMon(d) {
+  const m = new Date(d), dy = d.getDay();
+  m.setDate(d.getDate() - dy + (dy === 0 ? -6 : 1));
+  m.setHours(0,0,0,0); return m;
+}
+function wk(d)    { return d.toISOString().slice(0,10); }
+function fd(d)    { return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`; }
+function getSun(m){ const s=new Date(m); s.setDate(s.getDate()+6); return s; }
+function wlabel(m){ return `${fd(m)}(월) ~ ${fd(getSun(m))}(일)`; }
+
+function toggleSt(i, k) { rowSt[i] = rowSt[i] === k ? null : k; paintRow(i); }
+function paintRow(i) {
+  const tr = document.getElementById('r'+i); if (!tr) return;
+  tr.className = '';
+  if (rowSt[i]) { const st = ST.find(x=>x.k===rowSt[i]); if(st) tr.classList.add(st.row); }
+  ST.forEach(st => {
+    const b = document.getElementById('b'+i+st.k); if(!b) return;
+    b.className = 'sbtn' + (rowSt[i]===st.k ? ' '+st.on : '');
+  });
+}
+
+function makeItem(area, text, done) {
+  const row = document.createElement('div');
+  row.className = 'check-item';
+  const cb = document.createElement('input');
+  cb.type = 'checkbox'; cb.checked = done;
+  const inp = document.createElement('input');
+  inp.type = 'text';
+  inp.className = 'item-text' + (done ? ' done' : '');
+  inp.value = text; inp.placeholder = '업무 내용...';
+  cb.onchange = () => inp.classList.toggle('done', cb.checked);
+  inp.onkeydown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const nr = makeItem(area, '', false);
+      const items = [...area.querySelectorAll('.check-item')];
+      const next = items[items.indexOf(row)+1];
+      if (next) area.insertBefore(nr, next); else area.appendChild(nr);
+      nr.querySelector('.item-text').focus();
+    }
+    if (e.key === 'Backspace' && inp.value === '') {
+      e.preventDefault();
+      const items = [...area.querySelectorAll('.check-item')];
+      if (items.length <= 1) return;
+      const prev = items[items.indexOf(row)-1] || items[items.indexOf(row)+1];
+      row.remove();
+      if (prev) prev.querySelector('.item-text').focus();
+    }
+  };
+  const del = document.createElement('button');
+  del.className = 'del'; del.textContent = '✕';
+  del.onclick = () => {
+    if (area.querySelectorAll('.check-item').length <= 1) { inp.value=''; cb.checked=false; inp.classList.remove('done'); return; }
+    row.remove();
+  };
+  row.appendChild(cb); row.appendChild(inp); row.appendChild(del);
+  return row;
+}
+
+function makeTaskTd(rowIdx, slot) {
+  const td = document.createElement('td'); td.className = 'task-td';
+  const area = document.createElement('div'); area.className = 'check-area'; area.id = `area-${rowIdx}-${slot}`;
+  area.appendChild(makeItem(area, '', false));
+  const addBtn = document.createElement('button'); addBtn.className = 'add-btn'; addBtn.textContent = '＋ 항목 추가';
+  addBtn.onclick = () => { const nr = makeItem(area, '', false); area.appendChild(nr); nr.querySelector('.item-text').focus(); };
+  td.appendChild(area); td.appendChild(addBtn);
+  return td;
+}
+
+function initArea(rowIdx, slot, items) {
+  const area = document.getElementById(`area-${rowIdx}-${slot}`); if (!area) return;
+  area.innerHTML = '';
+  const list = (items && items.length) ? items : [{text:'', done:false}];
+  list.forEach(it => area.appendChild(makeItem(area, it.text||'', !!it.done)));
+}
+
+function getAreaItems(rowIdx, slot) {
+  const area = document.getElementById(`area-${rowIdx}-${slot}`); if (!area) return [];
+  return [...area.querySelectorAll('.check-item')]
+    .map(r => ({text: r.querySelector('.item-text').value, done: r.querySelector('input[type=checkbox]').checked}))
+    .filter(it => it.text.trim() !== '' || it.done);
+}
+
+function buildTable() {
+  const tb = document.getElementById('dtable'); tb.innerHTML = '';
+  DAYS.forEach((day, i) => {
+    const tr = document.createElement('tr'); tr.id = 'r'+i;
+    const tdDay = document.createElement('td'); tdDay.className = 'day-cell'; tdDay.textContent = day; tr.appendChild(tdDay);
+    const tdSt = document.createElement('td'); tdSt.className = 'status-td';
+    const sw = document.createElement('div'); sw.className = 'status-wrap';
+    ST.forEach(st => {
+      const btn = document.createElement('button'); btn.id = 'b'+i+st.k; btn.className = 'sbtn';
+      btn.innerHTML = `<span class="dot ${st.dot}"></span>${st.l}`;
+      btn.onclick = () => toggleSt(i, st.k); sw.appendChild(btn);
+    });
+    tdSt.appendChild(sw); tr.appendChild(tdSt);
+    tr.appendChild(makeTaskTd(i, 'am'));
+    tr.appendChild(makeTaskTd(i, 'pm'));
+    tb.appendChild(tr);
+  });
+}
+
+function buildGrateful() {
+  const g = document.getElementById('glist'); g.innerHTML = '';
+  for (let i=0; i<3; i++) {
+    const r = document.createElement('div'); r.className = 'grateful-row';
+    r.innerHTML = `<span>•</span><input type="text" id="gr${i}" placeholder="감사한 일을 적어보세요">`;
+    g.appendChild(r);
+  }
+}
+
+function loadWeek() {
+  const k = wk(ws);
+  document.getElementById('wlabel').textContent = wlabel(ws);
+  document.getElementById('subtitle').textContent = wlabel(ws);
+  const d = allD[k] || {};
+  rowSt = Array(DAYS.length).fill(null);
+  DAYS.forEach((_, i) => {
+    rowSt[i] = d.days?.[i]?.st || null; paintRow(i);
+    initArea(i, 'am', d.days?.[i]?.am || []);
+    initArea(i, 'pm', d.days?.[i]?.pm || []);
+  });
+  ['tss','tms','tsl','tml'].forEach((id, j) => { const el=document.getElementById(id); if(el) el.value=d.tasks?.[j]||''; });
+  for (let i=0; i<3; i++) { const el=document.getElementById('gr'+i); if(el) el.value=d.grateful?.[i]||''; }
+  renderHist();
+}
+
+function save() {
+  const k = wk(ws);
+  const days = DAYS.map((_, i) => ({ am: getAreaItems(i,'am'), pm: getAreaItems(i,'pm'), st: rowSt[i]||null }));
+  const tasks = ['tss','tms','tsl','tml'].map(id => document.getElementById(id)?.value||'');
+  const grateful = Array.from({length:3}, (_,i) => document.getElementById('gr'+i)?.value||'');
+  allD[k] = {days, tasks, grateful};
+  try { localStorage.setItem('wl3', JSON.stringify(allD)); } catch(e) {}
+  const b = document.getElementById('sbadge'); b.classList.add('show'); setTimeout(() => b.classList.remove('show'), 2000);
+  renderHist();
+}
+
+function clearForm() {
+  if (!confirm('이번 주 내용을 초기화할까요?')) return;
+  delete allD[wk(ws)];
+  try { localStorage.setItem('wl3', JSON.stringify(allD)); } catch(e) {}
+  loadWeek();
+}
+
+function cw(dir) { ws = new Date(ws); ws.setDate(ws.getDate() + dir*7); loadWeek(); }
+
+function renderHist() {
+  const bar = document.getElementById('histbar');
+  const keys = Object.keys(allD).sort().reverse().slice(0,8);
+  if (!keys.length) { bar.innerHTML=''; return; }
+  const cur = wk(ws);
+  bar.innerHTML = '<div style="font-size:12px;color:#888;margin-bottom:5px;">저장된 주차</div><div class="hist" id="hbtns"></div>';
+  const c = document.getElementById('hbtns');
+  keys.forEach(k => {
+    const b = document.createElement('button'); b.textContent = k;
+    if (k===cur) b.classList.add('on');
+    b.onclick = () => { ws=getMon(new Date(k)); loadWeek(); };
+    c.appendChild(b);
+  });
+}
+
+buildTable(); buildGrateful(); loadWeek();
+</script>
+</body>
+</html>
