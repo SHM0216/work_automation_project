@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>펌프장 실시간 모니터링</title>
+<title>대구광역시 빗물펌프장 모니터링</title>
 <style>
   :root {
     --bg: #0f172a;
@@ -143,7 +143,7 @@
 <body>
 <header>
   <div>
-    <h1>🌊 빗물펌프장 실시간 모니터링</h1>
+    <h1>🌊 대구광역시 빗물펌프장 실시간 모니터링</h1>
     <div style="font-size:11px;color:var(--muted);margin-top:2px;">22개소 통합 관제</div>
   </div>
   <div class="meta">
@@ -189,30 +189,30 @@ function configureBackend() {
   location.reload();
 }
 
-// ====== 22 station seed (matches backend/database.py) ======
+// ====== 22 station seed — 대구광역시 실제 펌프장 (matches backend/database.py) ======
 const SEED_STATIONS = [
-  {id:1,  name:'망원1 빗물펌프장', region:'마포구', warn:2.0, high:3.0, flood:3.8, pumpCount:4},
-  {id:2,  name:'망원2 빗물펌프장', region:'마포구', warn:1.8, high:2.8, flood:3.6, pumpCount:3},
-  {id:3,  name:'합정 빗물펌프장',  region:'마포구', warn:1.6, high:2.5, flood:3.2, pumpCount:3},
-  {id:4,  name:'신월 빗물펌프장',  region:'양천구', warn:2.1, high:3.1, flood:4.0, pumpCount:5},
-  {id:5,  name:'목동 빗물펌프장',  region:'양천구', warn:1.9, high:2.9, flood:3.7, pumpCount:4},
-  {id:6,  name:'강서 빗물펌프장',  region:'강서구', warn:1.9, high:2.9, flood:3.7, pumpCount:4},
-  {id:7,  name:'가양 빗물펌프장',  region:'강서구', warn:1.7, high:2.6, flood:3.4, pumpCount:3},
-  {id:8,  name:'구로 빗물펌프장',  region:'구로구', warn:1.7, high:2.6, flood:3.3, pumpCount:3},
-  {id:9,  name:'개봉 빗물펌프장',  region:'구로구', warn:1.5, high:2.4, flood:3.1, pumpCount:3},
-  {id:10, name:'시흥 빗물펌프장',  region:'금천구', warn:1.8, high:2.7, flood:3.5, pumpCount:3},
-  {id:11, name:'봉천 빗물펌프장',  region:'관악구', warn:1.7, high:2.6, flood:3.3, pumpCount:3},
-  {id:12, name:'신림 빗물펌프장',  region:'관악구', warn:2.0, high:3.0, flood:3.8, pumpCount:4},
-  {id:13, name:'사당 빗물펌프장',  region:'동작구', warn:1.9, high:2.8, flood:3.6, pumpCount:4},
-  {id:14, name:'노량진 빗물펌프장',region:'동작구', warn:1.6, high:2.5, flood:3.2, pumpCount:3},
-  {id:15, name:'반포 빗물펌프장',  region:'서초구', warn:2.0, high:3.0, flood:3.9, pumpCount:4},
-  {id:16, name:'서초 빗물펌프장',  region:'서초구', warn:1.7, high:2.6, flood:3.4, pumpCount:3},
-  {id:17, name:'강남역 빗물펌프장',region:'강남구', warn:2.2, high:3.2, flood:4.2, pumpCount:5},
-  {id:18, name:'삼성 빗물펌프장',  region:'강남구', warn:1.9, high:2.9, flood:3.7, pumpCount:4},
-  {id:19, name:'잠실 빗물펌프장',  region:'송파구', warn:2.0, high:3.0, flood:3.9, pumpCount:4},
-  {id:20, name:'석촌 빗물펌프장',  region:'송파구', warn:1.6, high:2.5, flood:3.3, pumpCount:3},
-  {id:21, name:'천호 빗물펌프장',  region:'강동구', warn:1.8, high:2.7, flood:3.5, pumpCount:3},
-  {id:22, name:'성내 빗물펌프장',  region:'강동구', warn:1.7, high:2.6, flood:3.4, pumpCount:3},
+  {id:1,  name:'월성펌프장',    region:'달서구',        warn:1.5, high:3.7, flood:4.9,  pumpCount:33, capacity:235.8},
+  {id:2,  name:'죽곡펌프장',    region:'달성군 다사읍', warn:5.4, high:6.7, flood:7.4,  pumpCount:3,  capacity:13.3},
+  {id:3,  name:'성서5차펌프장', region:'달성군 다사읍', warn:1.3, high:2.1, flood:2.5,  pumpCount:6,  capacity:17.2},
+  {id:4,  name:'이현펌프장',    region:'서구',          warn:2.0, high:3.0, flood:3.5,  pumpCount:8,  capacity:25.3},
+  {id:5,  name:'3공단펌프장',   region:'서구',          warn:2.2, high:3.7, flood:4.5,  pumpCount:12, capacity:26.3},
+  {id:6,  name:'비산펌프장',    region:'서구',          warn:2.0, high:4.0, flood:5.0,  pumpCount:3,  capacity:4.7},
+  {id:7,  name:'팔달펌프장',    region:'북구',          warn:4.5, high:5.4, flood:5.9,  pumpCount:5,  capacity:17.2},
+  {id:8,  name:'노곡펌프장',    region:'북구',          warn:1.4, high:4.1, flood:5.5,  pumpCount:2,  capacity:8.0},
+  {id:9,  name:'조야펌프장',    region:'북구',          warn:1.4, high:4.1, flood:5.5,  pumpCount:4,  capacity:30.0},
+  {id:10, name:'침산펌프장',    region:'북구',          warn:3.7, high:4.6, flood:5.0,  pumpCount:6,  capacity:12.5},
+  {id:11, name:'산격펌프장',    region:'북구',          warn:2.0, high:3.7, flood:4.5,  pumpCount:5,  capacity:9.8},
+  {id:12, name:'봉무펌프장',    region:'동구',          warn:5.2, high:7.0, flood:8.0,  pumpCount:7,  capacity:36.5},
+  {id:13, name:'동촌펌프장',    region:'동구',          warn:1.5, high:3.2, flood:4.0,  pumpCount:8,  capacity:46.0},
+  {id:14, name:'신암펌프장',    region:'동구',          warn:7.2, high:9.1, flood:10.0, pumpCount:5,  capacity:37.9},
+  {id:15, name:'방촌펌프장',    region:'동구',          warn:2.0, high:4.0, flood:5.0,  pumpCount:4,  capacity:2.3},
+  {id:16, name:'방촌2펌프장',   region:'동구',          warn:3.7, high:4.5, flood:4.9,  pumpCount:5,  capacity:9.2},
+  {id:17, name:'팔현펌프장',    region:'수성구',        warn:3.7, high:4.9, flood:5.5,  pumpCount:4,  capacity:11.0},
+  {id:18, name:'율하펌프장',    region:'동구',          warn:6.8, high:7.8, flood:8.3,  pumpCount:5,  capacity:11.3},
+  {id:19, name:'서재펌프장',    region:'달성군 다사읍', warn:4.0, high:4.3, flood:4.5,  pumpCount:3,  capacity:5.8},
+  {id:20, name:'서재2펌프장',   region:'달성군 다사읍', warn:4.0, high:5.3, flood:6.0,  pumpCount:5,  capacity:18.7},
+  {id:21, name:'창리펌프장',    region:'달성군 구지면', warn:5.4, high:6.9, flood:7.6,  pumpCount:5,  capacity:44.6},
+  {id:22, name:'가천펌프장',    region:'수성구',        warn:3.5, high:5.3, flood:6.2,  pumpCount:4,  capacity:9.2},
 ];
 
 const stations = new Map();
@@ -252,7 +252,7 @@ function renderCard(s) {
       <div class="metrics">
         <div><div class="k">수위</div><div class="v">${s.level != null ? s.level.toFixed(2) + ' m' : '-'}</div></div>
         <div><div class="k">펌프</div><div class="v">${s.pumps} / ${s.pumpCount}</div></div>
-        <div><div class="k">월류기준</div><div class="v">${s.flood.toFixed(1)} m</div></div>
+        <div><div class="k">한계수위</div><div class="v">${s.flood.toFixed(1)} m</div></div>
       </div>
     </div>
   `;
