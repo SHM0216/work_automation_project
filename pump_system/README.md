@@ -10,6 +10,7 @@
 
 ```
 pump_system/
+├── web/            정적 대시보드 (GitHub Pages / FastAPI에서 모두 서빙 가능)
 ├── backend/        FastAPI 서버 (REST + WebSocket)
 │   ├── main.py
 │   ├── database.py
@@ -52,6 +53,13 @@ python field_bridge.py --backend http://<host>:8000 --station-id 1
 ```
 
 Modbus/OPC 장비가 없어도 `--simulate` 옵션으로 모의 데이터를 송신할 수 있습니다.
+
+### Web Dashboard
+
+정적 HTML 한 장으로 22개 펌프장을 실시간으로 볼 수 있습니다.
+
+- **로컬 실행**: 백엔드 실행 후 `http://<host>:8000/` 로 접속하면 됩니다 (FastAPI가 `web/` 폴더를 그대로 서빙).
+- **GitHub Pages 배포**: `pump_system/web/` 내용을 Pages 소스로 지정하면 즉시 게시됩니다. 첫 로드 시 데모(시뮬레이션) 모드로 동작하고, 우상단 **백엔드 설정** 버튼으로 실제 서버 URL을 입력하면 WebSocket 실시간 연결이 바뀝니다. URL 쿼리 `?api=http://server:8000` 으로도 지정 가능합니다.
 
 ### Mobile
 

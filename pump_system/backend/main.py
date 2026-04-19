@@ -4,13 +4,17 @@ from __future__ import annotations
 import asyncio
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from database import init_db
 from routers import alerts, sensors, stations
 from services.alert_service import manager, offline_watchdog
+
+WEB_DIR = Path(__file__).resolve().parent.parent / "web"
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 log = logging.getLogger("pump_system")
@@ -55,6 +59,10 @@ app.include_router(alerts.router)
 @app.get("/health", tags=["meta"])
 def health() -> dict:
     return {"status": "ok"}
+
+
+if WEB_DIR.exists():
+    app.mount("/", StaticFiles(directory=str(WEB_DIR), html=True), name="web")
 
 
 @app.websocket("/ws")
