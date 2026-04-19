@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>대구광역시 빗물펌프장 모니터링</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --panel: #1e293b;
+    --panel-2: #273449;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #38bdf8;
+    --normal: #22c55e;
+    --info: #3b82f6;
+    --warning: #f59e0b;
+    --critical: #ef4444;
+    --offline: #64748b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Malgun Gothic',
+      'Apple SD Gothic Neo', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    background: var(--panel);
+    border-bottom: 1px solid #334155;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
+  header .meta { font-size: 12px; color: var(--muted); text-align: right; }
+  .conn { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+  .conn.on { background: var(--normal); box-shadow: 0 0 6px var(--normal); }
+  .conn.off { background: var(--critical); }
+
+  main { padding: 20px; max-width: 1400px; margin: 0 auto; }
+
+  .summary {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 20px;
+  }
+  .summary .pill {
+    background: var(--panel); padding: 14px; border-radius: 10px; text-align: center;
+    border: 1px solid #334155;
+  }
+  .summary .num { font-size: 24px; font-weight: 700; }
+  .summary .lbl { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .summary .pill.normal .num { color: var(--normal); }
+  .summary .pill.info .num { color: var(--info); }
+  .summary .pill.warning .num { color: var(--warning); }
+  .summary .pill.critical .num { color: var(--critical); }
+  .summary .pill.offline .num { color: var(--offline); }
+
+  .grid {
+    display: grid; gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  }
+  .card {
+    background: var(--panel); padding: 14px; border-radius: 10px;
+    border-left: 5px solid var(--offline); cursor: pointer;
+    transition: transform .1s ease, box-shadow .1s ease;
+  }
+  .card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.35); }
+  .card.normal { border-left-color: var(--normal); }
+  .card.info { border-left-color: var(--info); }
+  .card.warning { border-left-color: var(--warning); }
+  .card.critical { border-left-color: var(--critical); animation: blink 1s infinite; }
+  .card.offline { border-left-color: var(--offline); opacity: 0.7; }
+  @keyframes blink { 50% { box-shadow: 0 0 16px var(--critical); } }
+
+  .card .top { display: flex; justify-content: space-between; align-items: start; }
+  .card .name { font-weight: 700; font-size: 15px; }
+  .card .region { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .badge {
+    padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; color: #fff;
+    background: var(--offline);
+  }
+  .badge.normal { background: var(--normal); }
+  .badge.info { background: var(--info); }
+  .badge.warning { background: var(--warning); }
+  .badge.critical { background: var(--critical); }
+  .badge.offline { background: var(--offline); }
+
+  .level-bar {
+    height: 8px; background: #334155; border-radius: 4px; margin: 10px 0; overflow: hidden;
+    position: relative;
+  }
+  .level-bar .fill { height: 100%; background: var(--normal); transition: width .3s, background .3s; }
+  .level-bar .mark {
+    position: absolute; top: -2px; width: 1px; height: 12px; background: rgba(255,255,255,0.4);
+  }
+
+  .metrics { display: flex; gap: 12px; margin-top: 8px; font-size: 12px; }
+  .metrics div { flex: 1; }
+  .metrics .k { color: var(--muted); font-size: 10px; }
+  .metrics .v { font-weight: 600; }
+
+  .alerts-panel {
+    margin-top: 24px; background: var(--panel); border-radius: 10px; padding: 16px;
+    border: 1px solid #334155;
+  }
+  .alerts-panel h2 { font-size: 15px; margin-bottom: 10px; color: var(--accent); }
+  .alert-item {
+    padding: 10px; border-left: 4px solid var(--offline); background: var(--panel-2);
+    border-radius: 6px; margin-bottom: 6px; font-size: 13px;
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  }
+  .alert-item.critical { border-left-color: var(--critical); }
+  .alert-item.warning { border-left-color: var(--warning); }
+  .alert-item.info { border-left-color: var(--info); }
+  .alert-item.offline { border-left-color: var(--offline); }
+  .alert-item .msg { flex: 1; }
+  .alert-item .t { font-size: 11px; color: var(--muted); }
+  .alert-item .lvl {
+    font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; color: #fff;
+    background: var(--offline);
+  }
+
+  #backendCfg {
+    background: transparent; color: var(--accent); border: 1px solid var(--accent);
+    padding: 4px 10px; border-radius: 4px; font-size: 11px; cursor: pointer;
+  }
+  #backendCfg:hover { background: rgba(56,189,248,0.1); }
+
+  footer { text-align: center; padding: 20px; color: var(--muted); font-size: 11px; }
+
+  @media (max-width: 700px) {
+    .summary { grid-template-columns: repeat(3, 1fr); }
+    .grid { grid-template-columns: 1fr 1fr; }
+    header h1 { font-size: 15px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>🌊 대구광역시 빗물펌프장 실시간 모니터링</h1>
+    <div style="font-size:11px;color:var(--muted);margin-top:2px;">22개소 통합 관제</div>
+  </div>
+  <div class="meta">
+    <div><span id="connDot" class="conn off"></span><span id="connTxt">연결 끊김</span></div>
+    <div id="backendUrl" style="font-size:10px;margin-top:2px;">데모 모드</div>
+    <button id="backendCfg" onclick="configureBackend()">백엔드 설정</button>
+  </div>
+</header>
+
+<main>
+  <div class="summary">
+    <div class="pill normal"><div class="num" id="cntNormal">0</div><div class="lbl">정상</div></div>
+    <div class="pill info"><div class="num" id="cntInfo">0</div><div class="lbl">주의</div></div>
+    <div class="pill warning"><div class="num" id="cntWarning">0</div><div class="lbl">경보</div></div>
+    <div class="pill critical"><div class="num" id="cntCritical">0</div><div class="lbl">위험</div></div>
+    <div class="pill offline"><div class="num" id="cntOffline">0</div><div class="lbl">오프라인</div></div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="alerts-panel">
+    <h2>최근 경보</h2>
+    <div id="alerts"></div>
+  </div>
+</main>
+
+<footer>
+  실시간 데이터는 WebSocket으로 수신됩니다 · 데모 모드에서는 브라우저가 시뮬레이션합니다.
+</footer>
+
+<script>
+// ====== Config ======
+const PARAM_API = new URLSearchParams(location.search).get('api');
+const STORAGE_KEY = 'pumpBackendUrl';
+let backendUrl = PARAM_API || localStorage.getItem(STORAGE_KEY) || '';
+
+function configureBackend() {
+  const v = prompt('백엔드 URL (예: http://192.168.0.10:8000)\n비우면 데모 모드로 동작합니다.', backendUrl);
+  if (v === null) return;
+  backendUrl = v.trim().replace(/\/$/, '');
+  if (backendUrl) localStorage.setItem(STORAGE_KEY, backendUrl);
+  else localStorage.removeItem(STORAGE_KEY);
+  location.reload();
+}
+
+// ====== 22 station seed — 대구광역시 실제 펌프장 (matches backend/database.py) ======
+const SEED_STATIONS = [
+  {id:1,  name:'월성펌프장',    region:'달서구',        warn:1.5, high:3.7, flood:4.9,  pumpCount:33, capacity:235.8},
+  {id:2,  name:'죽곡펌프장',    region:'달성군 다사읍', warn:5.4, high:6.7, flood:7.4,  pumpCount:3,  capacity:13.3},
+  {id:3,  name:'성서5차펌프장', region:'달성군 다사읍', warn:1.3, high:2.1, flood:2.5,  pumpCount:6,  capacity:17.2},
+  {id:4,  name:'이현펌프장',    region:'서구',          warn:2.0, high:3.0, flood:3.5,  pumpCount:8,  capacity:25.3},
+  {id:5,  name:'3공단펌프장',   region:'서구',          warn:2.2, high:3.7, flood:4.5,  pumpCount:12, capacity:26.3},
+  {id:6,  name:'비산펌프장',    region:'서구',          warn:2.0, high:4.0, flood:5.0,  pumpCount:3,  capacity:4.7},
+  {id:7,  name:'팔달펌프장',    region:'북구',          warn:4.5, high:5.4, flood:5.9,  pumpCount:5,  capacity:17.2},
+  {id:8,  name:'노곡펌프장',    region:'북구',          warn:1.4, high:4.1, flood:5.5,  pumpCount:2,  capacity:8.0},
+  {id:9,  name:'조야펌프장',    region:'북구',          warn:1.4, high:4.1, flood:5.5,  pumpCount:4,  capacity:30.0},
+  {id:10, name:'침산펌프장',    region:'북구',          warn:3.7, high:4.6, flood:5.0,  pumpCount:6,  capacity:12.5},
+  {id:11, name:'산격펌프장',    region:'북구',          warn:2.0, high:3.7, flood:4.5,  pumpCount:5,  capacity:9.8},
+  {id:12, name:'봉무펌프장',    region:'동구',          warn:5.2, high:7.0, flood:8.0,  pumpCount:7,  capacity:36.5},
+  {id:13, name:'동촌펌프장',    region:'동구',          warn:1.5, high:3.2, flood:4.0,  pumpCount:8,  capacity:46.0},
+  {id:14, name:'신암펌프장',    region:'동구',          warn:7.2, high:9.1, flood:10.0, pumpCount:5,  capacity:37.9},
+  {id:15, name:'방촌펌프장',    region:'동구',          warn:2.0, high:4.0, flood:5.0,  pumpCount:4,  capacity:2.3},
+  {id:16, name:'방촌2펌프장',   region:'동구',          warn:3.7, high:4.5, flood:4.9,  pumpCount:5,  capacity:9.2},
+  {id:17, name:'팔현펌프장',    region:'수성구',        warn:3.7, high:4.9, flood:5.5,  pumpCount:4,  capacity:11.0},
+  {id:18, name:'율하펌프장',    region:'동구',          warn:6.8, high:7.8, flood:8.3,  pumpCount:5,  capacity:11.3},
+  {id:19, name:'서재펌프장',    region:'달성군 다사읍', warn:4.0, high:4.3, flood:4.5,  pumpCount:3,  capacity:5.8},
+  {id:20, name:'서재2펌프장',   region:'달성군 다사읍', warn:4.0, high:5.3, flood:6.0,  pumpCount:5,  capacity:18.7},
+  {id:21, name:'창리펌프장',    region:'달성군 구지면', warn:5.4, high:6.9, flood:7.6,  pumpCount:5,  capacity:44.6},
+  {id:22, name:'가천펌프장',    region:'수성구',        warn:3.5, high:5.3, flood:6.2,  pumpCount:4,  capacity:9.2},
+];
+
+const stations = new Map();
+for (const s of SEED_STATIONS) stations.set(s.id, { ...s, level: null, pumps: 0, status: 'offline' });
+const alerts = [];
+
+// ====== Render ======
+function classify(s, level) {
+  if (level == null) return 'offline';
+  if (level >= s.flood) return 'critical';
+  if (level >= s.high) return 'warning';
+  if (level >= s.warn) return 'info';
+  return 'normal';
+}
+function renderCard(s) {
+  const pct = s.level != null ? Math.min(100, (s.level / (s.flood * 1.2)) * 100) : 0;
+  const fillColor = ({normal:'var(--normal)', info:'var(--info)', warning:'var(--warning)', critical:'var(--critical)'}[s.status]) || 'var(--offline)';
+  const warnMark = (s.warn / (s.flood * 1.2)) * 100;
+  const highMark = (s.high / (s.flood * 1.2)) * 100;
+  const floodMark = (s.flood / (s.flood * 1.2)) * 100;
+  const statusLabel = {normal:'정상', info:'주의', warning:'경보', critical:'위험', offline:'오프라인'}[s.status];
+  return `
+    <div class="card ${s.status}" data-id="${s.id}">
+      <div class="top">
+        <div>
+          <div class="name">${s.name}</div>
+          <div class="region">${s.region}</div>
+        </div>
+        <span class="badge ${s.status}">${statusLabel}</span>
+      </div>
+      <div class="level-bar">
+        <div class="fill" style="width:${pct}%;background:${fillColor}"></div>
+        <div class="mark" style="left:${warnMark}%"></div>
+        <div class="mark" style="left:${highMark}%"></div>
+        <div class="mark" style="left:${floodMark}%;background:var(--critical)"></div>
+      </div>
+      <div class="metrics">
+        <div><div class="k">수위</div><div class="v">${s.level != null ? s.level.toFixed(2) + ' m' : '-'}</div></div>
+        <div><div class="k">펌프</div><div class="v">${s.pumps} / ${s.pumpCount}</div></div>
+        <div><div class="k">한계수위</div><div class="v">${s.flood.toFixed(1)} m</div></div>
+      </div>
+    </div>
+  `;
+}
+
+function renderAll() {
+  document.getElementById('grid').innerHTML =
+    Array.from(stations.values()).map(renderCard).join('');
+  const counts = { normal:0, info:0, warning:0, critical:0, offline:0 };
+  for (const s of stations.values()) counts[s.status]++;
+  document.getElementById('cntNormal').textContent = counts.normal;
+  document.getElementById('cntInfo').textContent = counts.info;
+  document.getElementById('cntWarning').textContent = counts.warning;
+  document.getElementById('cntCritical').textContent = counts.critical;
+  document.getElementById('cntOffline').textContent = counts.offline;
+}
+
+function renderAlerts() {
+  const html = alerts.slice(0, 20).map(a => `
+    <div class="alert-item ${a.level}">
+      <span class="lvl ${a.level}">${({info:'주의',warning:'경보',critical:'위험',offline:'오프라인'}[a.level])}</span>
+      <span class="msg">${a.message}</span>
+      <span class="t">${new Date(a.triggered_at).toLocaleTimeString('ko-KR')}</span>
+    </div>
+  `).join('');
+  document.getElementById('alerts').innerHTML = html || '<div style="color:var(--muted);font-size:12px;">경보 없음</div>';
+}
+
+function pushAlert(a) {
+  alerts.unshift(a);
+  if (alerts.length > 100) alerts.pop();
+  renderAlerts();
+}
+
+function setConn(on, label) {
+  document.getElementById('connDot').className = 'conn ' + (on ? 'on' : 'off');
+  document.getElementById('connTxt').textContent = label;
+}
+
+// ====== Demo simulation ======
+function runDemo() {
+  document.getElementById('backendUrl').textContent = '데모 모드 (로컬 시뮬레이션)';
+  setConn(true, '데모 시뮬레이션');
+  const t0 = Date.now();
+  for (const s of stations.values()) {
+    s.level = 1.2 + Math.random() * 0.5;
+    s.pumps = 0;
+    s.status = classify(s, s.level);
+  }
+  renderAll();
+
+  setInterval(() => {
+    const t = (Date.now() - t0) / 1000;
+    for (const s of stations.values()) {
+      const offset = (s.id * 0.37) % (Math.PI * 2);
+      const base = 1.5 + 1.2 * Math.sin(t / 60 + offset);
+      s.level = Math.max(0, base + (Math.random() - 0.5) * 0.1);
+      s.pumps = s.level < 1.8 ? 0 : s.level < 2.5 ? 1 : s.level < 3.2 ? 2 : 3;
+      const newStatus = classify(s, s.level);
+      if (newStatus !== s.status && newStatus !== 'normal' && newStatus !== 'offline') {
+        pushAlert({
+          level: newStatus,
+          message: `${s.name} ${({info:'주의 수위 도달',warning:'고수위 경보',critical:'월류 위험'}[newStatus])} (수위 ${s.level.toFixed(2)}m)`,
+          triggered_at: new Date().toISOString(),
+        });
+      }
+      s.status = newStatus;
+    }
+    renderAll();
+  }, 2000);
+}
+
+// ====== Live backend ======
+async function runLive() {
+  document.getElementById('backendUrl').textContent = backendUrl;
+  try {
+    const list = await fetch(`${backendUrl}/api/stations`).then(r => r.json());
+    for (const s of list) {
+      const local = stations.get(s.id);
+      if (!local) continue;
+      local.level = s.water_level_m;
+      local.pumps = s.pumps_running ?? 0;
+      local.status = s.status;
+    }
+    renderAll();
+    const activeAlerts = await fetch(`${backendUrl}/api/alerts?active_only=true`).then(r => r.json());
+    for (const a of activeAlerts.reverse()) pushAlert(a);
+  } catch (err) {
+    console.error('initial load failed', err);
+    setConn(false, '백엔드 연결 실패 — 데모로 전환');
+    return runDemo();
+  }
+  connectWs();
+}
+
+function connectWs() {
+  const wsUrl = backendUrl.replace(/^http/, 'ws') + '/ws';
+  const ws = new WebSocket(wsUrl);
+  ws.onopen = () => setConn(true, '실시간 연결됨');
+  ws.onclose = () => {
+    setConn(false, '재연결 중...');
+    setTimeout(connectWs, 2000);
+  };
+  ws.onerror = () => ws.close();
+  ws.onmessage = (evt) => {
+    const msg = JSON.parse(evt.data);
+    if (msg.type === 'reading') {
+      const s = stations.get(msg.station_id);
+      if (!s) return;
+      s.level = msg.water_level_m;
+      s.pumps = msg.pumps_running ?? s.pumps;
+      s.status = msg.status ?? classify(s, s.level);
+      renderAll();
+    } else if (msg.type === 'alert') {
+      pushAlert(msg);
+    }
+  };
+}
+
+// ====== Boot ======
+renderAll();
+renderAlerts();
+if (backendUrl) runLive(); else runDemo();
+</script>
+</body>
+</html>
